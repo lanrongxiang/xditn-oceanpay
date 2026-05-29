@@ -17,7 +17,7 @@ class PaymentMethodController extends Controller
     {
         $paymentMethodClass = config('oceanpay.models.payment_method');
 
-        $resource = $paymentMethodClass::query()
+        $paginator = $paymentMethodClass::query()
             ->when($request->status, function ($query, $value) {
                 $query->where('status', $value);
             })
@@ -27,7 +27,12 @@ class PaymentMethodController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($request->get('per_page'));
 
-        return PaymentMethodResource::collection($resource);
+        return (object) [
+            'data' => PaymentMethodResource::collection($paginator->items())->resolve(),
+            'total' => $paginator->total(),
+            'per_page' => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+        ];
     }
 
     public function store(StorePaymentMethodRequest $request)
