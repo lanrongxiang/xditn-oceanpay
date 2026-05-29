@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Xditn\Oceanpay\Enums\PaymentMethodType;
 use Xditn\Oceanpay\Enums\PaymentProviderChannelStatus;
+use Xditn\Oceanpay\Http\Resources\Admin\PaymentProviderChannelResource;
 
 class PaymentProviderChannelController extends Controller
 {
@@ -32,7 +33,7 @@ class PaymentProviderChannelController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($request->get('per_page'));
 
-        return response()->json($channels);
+        return PaymentProviderChannelResource::collection($channels);
     }
 
     public function store(Request $request)
@@ -41,16 +42,14 @@ class PaymentProviderChannelController extends Controller
 
         $channel = $paymentProviderChannelClass::create($this->validateData($request));
 
-        return response()->json(['data' => $channel], 201);
+        return new PaymentProviderChannelResource($channel);
     }
 
     public function show(string $id)
     {
         $paymentProviderChannelClass = config('oceanpay.models.payment_provider_channel');
 
-        return response()->json([
-            'data' => $paymentProviderChannelClass::findOrFail($id),
-        ]);
+        return new PaymentProviderChannelResource($paymentProviderChannelClass::findOrFail($id));
     }
 
     public function update(Request $request, string $id)
@@ -60,7 +59,7 @@ class PaymentProviderChannelController extends Controller
 
         $channel->update($this->validateData($request, false));
 
-        return response()->json(['data' => $channel]);
+        return new PaymentProviderChannelResource($channel);
     }
 
     public function destroy(string $id)

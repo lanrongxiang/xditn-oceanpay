@@ -5,6 +5,7 @@ namespace Xditn\Oceanpay\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
+use Xditn\Oceanpay\Http\Resources\Admin\PaymentProviderCurrencyResource;
 
 class PaymentProviderCurrencyController extends Controller
 {
@@ -23,7 +24,7 @@ class PaymentProviderCurrencyController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($request->get('per_page'));
 
-        return response()->json($currencies);
+        return PaymentProviderCurrencyResource::collection($currencies);
     }
 
     public function store(Request $request)
@@ -32,16 +33,14 @@ class PaymentProviderCurrencyController extends Controller
 
         $currency = $paymentProviderCurrencyClass::create($this->validateData($request));
 
-        return response()->json(['data' => $currency], 201);
+        return new PaymentProviderCurrencyResource($currency);
     }
 
     public function show(string $id)
     {
         $paymentProviderCurrencyClass = config('oceanpay.models.payment_provider_currency');
 
-        return response()->json([
-            'data' => $paymentProviderCurrencyClass::findOrFail($id),
-        ]);
+        return new PaymentProviderCurrencyResource($paymentProviderCurrencyClass::findOrFail($id));
     }
 
     public function update(Request $request, string $id)
@@ -51,7 +50,7 @@ class PaymentProviderCurrencyController extends Controller
 
         $currency->update($this->validateData($request, false));
 
-        return response()->json(['data' => $currency]);
+        return new PaymentProviderCurrencyResource($currency);
     }
 
     public function destroy(string $id)
