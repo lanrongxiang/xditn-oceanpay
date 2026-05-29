@@ -30,7 +30,7 @@ class PaymentProviderController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return PaymentProviderResource::collection($resource)->resolve();
+        return PaymentProviderResource::collection($resource);
     }
 
     public function store(StorePaymentProviderRequest $request)
@@ -81,7 +81,7 @@ class PaymentProviderController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return PaymentProviderResource::collection($providers)->resolve();
+        return PaymentProviderResource::collection($providers);
     }
 
     protected function encryptSecretConfig(array $data): array
