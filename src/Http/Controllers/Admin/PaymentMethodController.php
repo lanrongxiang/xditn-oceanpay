@@ -27,7 +27,7 @@ class PaymentMethodController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($request->get('per_page'));
 
-        return PaymentMethodResource::collection($resource);
+        return PaymentMethodResource::collection($resource)->resolve();
     }
 
     public function store(StorePaymentMethodRequest $request)
