@@ -19,8 +19,6 @@ return [
     'models' => [
         'payment_method' => Xditn\Oceanpay\Models\PaymentMethod::class,
         'payment_provider' => Xditn\Oceanpay\Models\PaymentProvider::class,
-        'payment_provider_channel' => Xditn\Oceanpay\Models\PaymentProviderChannel::class,
-        'payment_provider_currency' => Xditn\Oceanpay\Models\PaymentProviderCurrency::class,
     ],
 
     'providers' => [
