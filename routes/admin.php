@@ -13,7 +13,7 @@ Route::group([
         ->name('payment-providers.options');
     Route::apiResource('payment-providers', PaymentProviderController::class);
 
-    Route::patch('payment-methods/{payment_method}/status', [PaymentMethodController::class, 'status'])
+    Route::put('payment-methods/{payment_method}/status', [PaymentMethodController::class, 'status'])
         ->name('payment-methods.status');
     Route::put('payment-methods/{payment_method}/config', [PaymentMethodController::class, 'config'])
         ->name('payment-methods.config');
