@@ -24,7 +24,7 @@ abstract class AbstractDeposit implements ArrayAccess
     /**
      * The deposit's URL.
      */
-    public string $url;
+    public ?string $url = null;
 
     /**
      * The deposit's QR-code.
@@ -88,7 +88,7 @@ abstract class AbstractDeposit implements ArrayAccess
     /**
      * Get the URL for the deposit.
      */
-    public function getUrl(): string
+    public function getUrl(): ?string
     {
         return $this->url;
     }
