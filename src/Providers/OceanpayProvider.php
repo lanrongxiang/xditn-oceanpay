@@ -46,11 +46,17 @@ class OceanpayProvider extends AbstractProvider
 
         $response = $this->post($url, $data);
 
+        $responseData = $response->json('data');
+        
+        if (empty($responseData)) {
+            $responseData = $response->json();
+        }
+
         return (new Deposit)->setRaw($response->json())->map([
-            'reference' => $response->json('out_trade_no'),
-            'providerReference' => $response->json('trade_no'),
-            'url' => $response->json('payment_url'),
-            'qrCode' => $response->json('qr_code_text'),
+            'reference' => data_get($responseData, 'out_trade_no'),
+            'providerReference' => data_get($responseData, 'trade_no'),
+            'url' => data_get($responseData, 'payment_url'),
+            'qrCode' => data_get($responseData, 'qr_code_text'),
         ]);
     }
 
