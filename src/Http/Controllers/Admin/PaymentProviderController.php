@@ -22,6 +22,9 @@ class PaymentProviderController extends Controller
             ->when($request->input('code'), function (Builder $query, $value) {
                 $query->where('code', 'like', '%'.$value.'%');
             })
+            ->when($request->filled('status'), function (Builder $query) use ($request) {
+                $query->where('status', $request->input('status'));
+            })
             ->when($request->input('currency_code'), function (Builder $query, $value) {
                 $query->whereHas('currencies', function (Builder $query) use ($value) {
                     $query->where('currency_code', $value);
@@ -77,6 +80,9 @@ class PaymentProviderController extends Controller
             ->select(['id', 'name'])
             ->when($request->input('name'), function (Builder $query, $value) {
                 $query->where('name', 'like', '%'.$value.'%');
+            })
+            ->when($request->filled('status'), function (Builder $query) use ($request) {
+                $query->where('status', $request->input('status'));
             })
             ->orderBy('id', 'desc')
             ->get();
