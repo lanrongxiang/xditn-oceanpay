@@ -25,6 +25,6 @@ class DatabaseConfigurationResolver implements ConfigurationResolvers
         $config = $paymentMethod->config ?? [];
         $secretConfig = $paymentMethod->secret_config ?? [];
 
-        return array_merge($config, $secretConfig);
+        return array_merge($secretConfig,$config);
     }
 }
