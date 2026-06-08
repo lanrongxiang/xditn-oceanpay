@@ -5,6 +5,7 @@ namespace Xditn\Oceanpay\Http\Middleware;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -32,7 +33,11 @@ class ValidateWebhookCall
         $gateway = PaymentGateway::driver($driver);
         $gateway->setConfig($config);
 
-        if (! $gateway->isValidAuthorization($request)) {
+        $isValidAuthorization = $gateway->isValidAuthorization($request);
+
+        $this->logWebhookValidation($request, $config, $driver, $isValidAuthorization);
+
+        if (! $isValidAuthorization) {
             return new JsonResponse([
                 'message' => 'Invalid signature or token.',
             ], Response::HTTP_FORBIDDEN);
@@ -74,5 +79,44 @@ class ValidateWebhookCall
         if (! $collection->contains($ip)) {
             throw new AccessDeniedHttpException('Your IP address is not on the whitelist.');
         }
+    }
+
+    protected function logWebhookValidation(Request $request, ?array $config, string $driver, bool $isValid): void
+    {
+        if (! data_get($config, 'webhook_debug_enabled')) {
+            return;
+        }
+
+        $rawBody = $request->getContent();
+        $includeRawBody = (bool) data_get($config, 'webhook_debug_include_raw_body', false);
+        $headers = collect($request->headers->all())
+            ->only([
+                'content-type',
+                'accept',
+                'user-agent',
+                'x-forwarded-for',
+                'x-real-ip',
+                'cf-connecting-ip',
+            ])
+            ->map(fn (array $value) => implode(',', $value))
+            ->all();
+
+        Log::channel((string) data_get($config, 'webhook_debug_channel', 'oceanpay'))->info('Oceanpay webhook authorization checked.', array_filter([
+            'driver' => $driver,
+            'type' => $request->route('type'),
+            'key' => $request->route('key'),
+            'valid' => $isValid,
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'ip' => $request->ip(),
+            'client_ip' => $request->getClientIp(),
+            'headers' => $headers,
+            'input_keys' => array_keys($request->all()),
+            'input' => $request->except(['signature']),
+            'incoming_signature' => $request->input('signature'),
+            'raw_body_sha256' => hash('sha256', $rawBody),
+            'raw_body_length' => strlen($rawBody),
+            'raw_body' => $includeRawBody ? $rawBody : null,
+        ], fn ($value) => $value !== null));
     }
 }

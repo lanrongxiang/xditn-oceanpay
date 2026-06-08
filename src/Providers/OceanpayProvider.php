@@ -8,6 +8,7 @@ use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Xditn\Oceanpay\Events\RequestFailed;
 use Xditn\Oceanpay\Exceptions\RequestFailedException;
@@ -47,7 +48,7 @@ class OceanpayProvider extends AbstractProvider
         $response = $this->post($url, $data);
 
         $responseData = $response->json('data');
-        
+
         if (empty($responseData)) {
             $responseData = $response->json();
         }
@@ -222,12 +223,45 @@ class OceanpayProvider extends AbstractProvider
         $incomingSignature = $request->input('signature');
 
         if (! $incomingSignature) {
+            $this->logWebhookSignatureVerification($request, null, null, false, 'missing_signature');
+
             return false;
         }
 
-        $signature = $this->generateSignature($request->all(), ['signature']);
+        $data = $request->all();
+        $stringToSign = $this->buildSignaturePayload($data, ['signature']);
+        $signature = $this->generateSignature($data, ['signature']);
+        $isValid = hash_equals($signature, $incomingSignature);
 
-        return hash_equals($signature, $incomingSignature);
+        $this->logWebhookSignatureVerification($request, $stringToSign, $signature, $isValid);
+
+        return $isValid;
+    }
+
+    protected function logWebhookSignatureVerification(
+        Request $request,
+        ?string $stringToSign,
+        ?string $computedSignature,
+        bool $isValid,
+        ?string $reason = null
+    ): void {
+        if (! $this->getConfig('webhook_debug_enabled')) {
+            return;
+        }
+
+        Log::channel((string) $this->getConfig('webhook_debug_channel', 'oceanpay'))->info('Oceanpay webhook signature verified.', array_filter([
+            'driver' => $request->route('driver'),
+            'type' => $request->route('type'),
+            'key' => $request->route('key'),
+            'valid' => $isValid,
+            'reason' => $reason,
+            'incoming_signature' => $request->input('signature'),
+            'computed_signature' => $computedSignature,
+            'string_to_sign' => $stringToSign,
+            'string_to_sign_sha256' => $stringToSign !== null ? hash('sha256', $stringToSign) : null,
+            'access_key_configured' => (bool) $this->getConfig('access_key'),
+            'secret_key_configured' => (bool) $this->getConfig('secret_key'),
+        ], fn ($value) => $value !== null));
     }
 
     /**

@@ -36,6 +36,10 @@ return [
 
             'whitelist_enabled' => env('OCEANPAY_WEBHOOK_WHITELIST_ENABLED', false),
             'whitelist_ip_addresses' => [],
+
+            'webhook_debug_enabled' => env('OCEANPAY_WEBHOOK_DEBUG_ENABLED', false),
+            'webhook_debug_channel' => env('OCEANPAY_WEBHOOK_DEBUG_CHANNEL', 'oceanpay'),
+            'webhook_debug_include_raw_body' => env('OCEANPAY_WEBHOOK_DEBUG_INCLUDE_RAW_BODY', false),
         ],
     ],
 ];
