@@ -23,6 +23,8 @@ class ValidateWebhookCall
     {
         $config = $this->getConfig($request);
 
+        $this->normalizeWebhookPayload($request);
+
         if (data_get($config, 'whitelist_enabled')) {
             $whitelist = data_get($config, 'whitelist_ip_addresses');
 
@@ -79,6 +81,25 @@ class ValidateWebhookCall
         if (! $collection->contains($ip)) {
             throw new AccessDeniedHttpException('Your IP address is not on the whitelist.');
         }
+    }
+
+    protected function normalizeWebhookPayload(Request $request): void
+    {
+        if ($request->input('signature')) {
+            return;
+        }
+
+        $rawBody = trim($request->getContent());
+        if ($rawBody === '') {
+            return;
+        }
+
+        $payload = json_decode($rawBody, true);
+        if (! is_array($payload) || json_last_error() !== JSON_ERROR_NONE) {
+            return;
+        }
+
+        $request->merge($payload);
     }
 
     protected function logWebhookValidation(Request $request, ?array $config, string $driver, bool $isValid): void
